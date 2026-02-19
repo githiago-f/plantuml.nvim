@@ -8,26 +8,26 @@ local M = {}
 function M.render(bufnr, cb)
   local p = paths.build(bufnr)
 
-  vim.fn.writefile(
-    vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
-    p.src
-  )
+  local buflines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  vim.fn.writefile(buflines, p.src)
 
   local format_flag = string.format("-t%s", config.output.format)
-
-  vim.fn.jobstart({
-    config.cmd.exec,
-    format_flag,
+  local args = {
     p.src,
+    format_flag,
     "-o",
     config.cmd.temp_dir
-  }, {
+  }
+
+  local cmd = vim.split(config.cmd.exec, " ")
+  table.move(args, 1, #args, #cmd + 1, cmd)
+
+  vim.fn.jobstart(cmd, {
     on_exit = function()
-      if cb then
-        vim.schedule(function()
-          cb(p.img)
-        end)
-      end
+      vim.schedule(function()
+        if cb then cb(p.img) end
+      end)
     end
   })
 end

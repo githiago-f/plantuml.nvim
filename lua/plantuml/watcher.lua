@@ -14,7 +14,7 @@ local function debounce(bufnr, fn)
   timers[bufnr] = vim.loop.new_timer()
 
   timers[bufnr]:start(
-    config.debounce_ms,
+    config.cmd.debounce_ms,
     0,
     vim.schedule_wrap(fn)
   )

@@ -3,7 +3,8 @@ local M = {}
 ---@alias fileFormat "svg" | "png" | "utxt"
 M.defaults = {
   output = {
-    format = "svg"
+    format = "png",
+    window_size = 70
   },
   cmd = {
     exec = "plantuml",
@@ -13,7 +14,7 @@ M.defaults = {
 }
 
 --- @alias PumlOptions
---- | { output: { format: fileFormat }, cmd: { exec: string, debounce_ms: number, temp_dir: string } }
+--- | { output: { format: fileFormat, window_size: number }, cmd: { exec: string, debounce_ms: number, temp_dir: string } }
 
 ---@param opts PumlOptions | nil
 function M.setup(opts)
