@@ -6,7 +6,7 @@ vim.g.loaded_plantuml = true
 vim.api.nvim_create_user_command(
   "PlantumlPreviewToggle",
   function()
-    require("plantuml-preview").toggle()
+    require("plantuml").toggle()
   end,
   {}
 )
@@ -14,7 +14,7 @@ vim.api.nvim_create_user_command(
 vim.api.nvim_create_user_command(
   "PlantumlPreviewOpen",
   function()
-    require("plantuml-preview").open()
+    require("plantuml").open()
   end,
   {}
 )
@@ -22,7 +22,7 @@ vim.api.nvim_create_user_command(
 vim.api.nvim_create_user_command(
   "PlantumlPreviewClose",
   function()
-    require("plantuml-preview").close()
+    require("plantuml").close()
   end,
   {}
 )
