@@ -4,14 +4,18 @@ local preview = require("plantuml.preview")
 
 local M = {}
 
+---@type { [number]: any }
 local timers = {}
 
+---@param bufnr number
+---@param fn fun()
 local function debounce(bufnr, fn)
   if timers[bufnr] then
     timers[bufnr]:stop()
+    timers[bufnr]:close()
   end
 
-  timers[bufnr] = vim.loop.new_timer()
+  timers[bufnr] = vim.uv.new_timer()
 
   timers[bufnr]:start(
     config.cmd.debounce_ms,
@@ -20,14 +24,17 @@ local function debounce(bufnr, fn)
   )
 end
 
-function M.attach(bufnr)
+---@param bufnr number
+---@param p ImagePaths
+function M.attach(bufnr, p)
   vim.api.nvim_create_autocmd(
     { "TextChanged", "TextChangedI", "BufWritePost" },
     {
       buffer = bufnr,
       callback = function()
         debounce(bufnr, function()
-          renderer.render(bufnr, function(img)
+          renderer.render(bufnr, p, function(img)
+            print(img)
             preview.reload(bufnr)
           end)
         end)
