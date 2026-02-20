@@ -4,6 +4,9 @@ function M.ensure_tmp()
   vim.fn.mkdir(require("plantuml.config").options.cmd.temp_dir, "p")
 end
 
+---@alias ImagePaths
+---| { img: string, src: string }
+---@return ImagePaths
 function M.build(bufnr)
   M.ensure_tmp()
   local config = require("plantuml.config").options
