@@ -1,3 +1,5 @@
+local config = require("plantuml.config").options
+
 local M = {}
 
 local state = {
@@ -17,7 +19,7 @@ local function create_vsplit(img_buf)
   vim.bo[img_buf].bufhidden = "wipe"
   vim.bo[img_buf].swapfile = false
 
-  local width = require("plantuml.config").options.output.window_size or 40
+  local width = config.output.window_size or 40
 
   -- optional: fix width
   vim.cmd(string.format("vertical resize %s", width))
@@ -58,10 +60,10 @@ function M.reload(source_bufnr)
     return
   end
 
-  vim.cmd("checktime " .. p.buf)
+  vim.o.autoread = true
 
   vim.api.nvim_buf_call(p.buf, function()
-    vim.cmd("silent edit!")
+    vim.cmd("edit!")
   end)
 end
 
@@ -78,6 +80,10 @@ function M.close(source_bufnr)
   end
 
   state.previews[source_bufnr] = nil
+end
+
+function M.exists(bufnr)
+  return state.previews[bufnr] ~= nil
 end
 
 return M

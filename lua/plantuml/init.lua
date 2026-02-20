@@ -1,3 +1,6 @@
+local paths = require('plantuml.paths')
+local renderer = require("plantuml.renderer")
+
 local M = {}
 
 function M.setup(...)
@@ -5,25 +8,28 @@ function M.setup(...)
 end
 
 function M.open()
+  local preview = require('plantuml.preview')
   local bufnr = vim.api.nvim_get_current_buf()
-  local p = require("plantuml.paths").build(bufnr)
+  local p = paths.build(bufnr)
 
-  require("plantuml.renderer").render(bufnr, function(img)
-    require("plantuml.preview").open(bufnr, img)
+  renderer.render(bufnr, p, function(img)
+    if preview.exists(bufnr) then
+      preview.reload(bufnr)
+    else
+      preview.open(bufnr, img)
+    end
   end)
 
-  require("plantuml.watcher").attach(bufnr)
+  require("plantuml.watcher").attach(bufnr, p)
 end
 
 function M.close()
-  require("plantuml.preview").close(
-    vim.api.nvim_get_current_buf()
-  )
+  require('plantuml.preview').close(vim.api.nvim_get_current_buf())
 end
 
 function M.toggle()
   local bufnr = vim.api.nvim_get_current_buf()
-  require("plantuml.preview").close(bufnr)
+  require('plantuml.preview').close(bufnr)
   M.open()
 end
 
