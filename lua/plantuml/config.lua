@@ -18,6 +18,7 @@ M.defaults = {
 
 ---@param opts PumlOptions | nil
 function M.setup(opts)
+  ---@type PumlOptions
   M.options = vim.tbl_deep_extend(
     "force",
     M.defaults,
