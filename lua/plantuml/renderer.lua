@@ -1,18 +1,15 @@
-local config = require('plantuml.config').options
-local paths = require('plantuml.paths')
-
 local M = {}
 
----@alias Callback  fun(path: string): nil
+---@alias Callback  fun(path: string)
+---@param p ImagePaths
 ---@param cb Callback
-function M.render(bufnr, cb)
-  local p = paths.build(bufnr)
-
+function M.render(bufnr, p, cb)
+  local config = require('plantuml.config').options
   local buflines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
   vim.fn.writefile(buflines, p.src)
 
-  local format_flag = string.format("-t%s", config.output.format)
+  local format_flag = string.format("-t%s", config.output.format or 'png')
   local args = {
     p.src,
     format_flag,
