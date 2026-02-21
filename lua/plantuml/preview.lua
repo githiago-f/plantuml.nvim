@@ -2,31 +2,39 @@ local config = require("plantuml.config").options
 
 local M = {}
 
+M.window_width = config.output.window_size
+
+---@alias preview
+---| { win: number, buf: number, img: string  }
+---
+---@alias tstate
+---| { previews: { [number]: preview } }
+---
+---@type tstate
 local state = {
   previews = {} -- [source_bufnr] = { win, buf, path }
 }
 
 local function create_vsplit(img_buf)
-  -- open split on the right
   vim.cmd("vsplit")
 
   local win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(win, img_buf)
 
-  -- preview ergonomics
   vim.bo[img_buf].modifiable = false
   vim.bo[img_buf].readonly = true
-  vim.bo[img_buf].bufhidden = "wipe"
+  vim.bo[img_buf].bufhidden = "hide"
+  vim.bo[img_buf].buftype = 'nofile'
   vim.bo[img_buf].swapfile = false
 
-  local width = config.output.window_size or 40
-
-  -- optional: fix width
-  vim.cmd(string.format("vertical resize %s", width))
+  vim.cmd(string.format("vertical resize %s", M.window_width))
 
   return win
 end
 
+---@param source_bufnr number
+---@param img_path string
+---@return preview
 function M.open(source_bufnr, img_path)
   if state.previews[source_bufnr] then
     return state.previews[source_bufnr]
@@ -52,19 +60,32 @@ function M.open(source_bufnr, img_path)
   return state.previews[source_bufnr]
 end
 
-function M.reload(source_bufnr)
+function M.reload(source_bufnr, img_path)
   local p = state.previews[source_bufnr]
-  if not p then return end
+  if not p then
+    return M.open(source_bufnr, img_path)
+  end
 
-  if not vim.api.nvim_buf_is_valid(p.buf) then
+  p.img = img_path
+
+  if vim.api.nvim_buf_is_valid(p.buf) then
+    local win_width = vim.api.nvim_win_get_width(p.win)
+    M.window_width = win_width
+
+    vim.api.nvim_buf_delete(p.buf, { force = true })
+  end
+
+  local new_buf = vim.fn.bufadd(img_path)
+  vim.fn.bufload(new_buf)
+
+  if not vim.api.nvim_win_is_valid(p.win) then
+    p.win = create_vsplit(new_buf)
     return
   end
 
-  vim.o.autoread = true
+  vim.api.nvim_win_set_buf(p.win, new_buf)
 
-  vim.api.nvim_buf_call(p.buf, function()
-    vim.cmd("edit!")
-  end)
+  p.buf = new_buf
 end
 
 function M.close(source_bufnr)

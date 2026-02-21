@@ -5,13 +5,11 @@ function M.ensure_tmp()
 end
 
 ---@alias ImagePaths
----| { img: string, src: string }
+---| { img: string | nil, src: string }
 ---@return ImagePaths
 function M.build(bufnr)
   M.ensure_tmp()
   local config = require("plantuml.config").options
-
-  local ext = config.output.format
 
   return {
     src = string.format(
@@ -19,12 +17,7 @@ function M.build(bufnr)
       config.cmd.temp_dir,
       bufnr
     ),
-    img = string.format(
-      "%s/%s.%s",
-      config.cmd.temp_dir,
-      bufnr,
-      ext
-    )
+    img = nil
   }
 end
 

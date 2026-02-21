@@ -4,7 +4,7 @@ local preview = require("plantuml.preview")
 
 local M = {}
 
----@type { [number]: any }
+---@type { [number]: uv.uv_timer_t }
 local timers = {}
 
 ---@param bufnr number
@@ -34,8 +34,7 @@ function M.attach(bufnr, p)
       callback = function()
         debounce(bufnr, function()
           renderer.render(bufnr, p, function(img)
-            print(img)
-            preview.reload(bufnr)
+            preview.reload(bufnr, img)
           end)
         end)
       end,

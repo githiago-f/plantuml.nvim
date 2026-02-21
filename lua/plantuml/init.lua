@@ -14,7 +14,7 @@ function M.open()
 
   renderer.render(bufnr, p, function(img)
     if preview.exists(bufnr) then
-      preview.reload(bufnr)
+      preview.reload(bufnr, img)
     else
       preview.open(bufnr, img)
     end
