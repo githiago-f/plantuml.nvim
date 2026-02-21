@@ -27,6 +27,7 @@ local function create_vsplit(img_buf)
   vim.bo[img_buf].buftype = 'nofile'
   vim.bo[img_buf].swapfile = false
 
+
   vim.cmd(string.format("vertical resize %s", M.window_width))
 
   return win
@@ -62,16 +63,14 @@ end
 
 function M.reload(source_bufnr, img_path)
   local p = state.previews[source_bufnr]
-  if not p then
-    return M.open(source_bufnr, img_path)
-  end
+  if not p then return M.open(source_bufnr, img_path) end
 
   p.img = img_path
 
-  if vim.api.nvim_buf_is_valid(p.buf) then
-    local win_width = vim.api.nvim_win_get_width(p.win)
-    M.window_width = win_width
+  local win_width = vim.api.nvim_win_get_width(p.win)
+  M.window_width = win_width
 
+  if vim.api.nvim_buf_is_valid(p.buf) then
     vim.api.nvim_buf_delete(p.buf, { force = true })
   end
 
@@ -79,7 +78,9 @@ function M.reload(source_bufnr, img_path)
   vim.fn.bufload(new_buf)
 
   if not vim.api.nvim_win_is_valid(p.win) then
+    local current_window = vim.api.nvim_get_current_win()
     p.win = create_vsplit(new_buf)
+    vim.api.nvim_set_current_win(current_window)
     return
   end
 
