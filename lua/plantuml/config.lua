@@ -8,7 +8,7 @@ M.defaults = {
   },
   cmd = {
     exec = "plantuml",
-    debounce_ms = 500,
+    debounce_ms = 2000,
     temp_dir = "/tmp/nvim-plantuml",
   }
 }
