@@ -3,8 +3,15 @@ if vim.g.loaded_plantuml then
 end
 vim.g.loaded_plantuml = true
 
+local commands = {
+  toggle = "PlantumlPreviewToggle",
+  open = "PlantumlPreviewOpen",
+  close = "PlantumlPreviewClose",
+  generate = "PlantumlGenerateWorkspace"
+}
+
 vim.api.nvim_create_user_command(
-  "PlantumlPreviewToggle",
+  commands.toggle,
   function()
     require("plantuml").toggle()
   end,
@@ -12,7 +19,7 @@ vim.api.nvim_create_user_command(
 )
 
 vim.api.nvim_create_user_command(
-  "PlantumlPreviewOpen",
+  commands.open,
   function()
     require("plantuml").open()
   end,
@@ -20,7 +27,7 @@ vim.api.nvim_create_user_command(
 )
 
 vim.api.nvim_create_user_command(
-  "PlantumlPreviewClose",
+  commands.close,
   function()
     require("plantuml").close()
   end,
