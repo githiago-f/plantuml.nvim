@@ -60,6 +60,46 @@ local function to_list(v)
   return { v }
 end
 
+-- terminal cell size in pixels; nil when unavailable (e.g. headless).
+local function cell_size()
+  local ok, term = pcall(require, "image.utils.term")
+  if not ok then return nil end
+  local size = term.get_size()
+  return size
+end
+
+-- geometry (in terminal cells) that renders the image at the given zoom.
+-- zoom = 1 means "fit the diagram inside the preview window" (aspect
+-- preserved); zoom > 1 overflows the pane on purpose, zoom < 1 shrinks it.
+local function zoom_geometry(p, img, zoom)
+  local cell = cell_size()
+  if not cell or not cell.cell_width or not cell.cell_height then return nil end
+  if not vim.api.nvim_win_is_valid(p.win) then return nil end
+
+  local win_w = vim.api.nvim_win_get_width(p.win)
+  local win_h = vim.api.nvim_win_get_height(p.win)
+  local nat_w = img.image_width / cell.cell_width
+  local nat_h = img.image_height / cell.cell_height
+
+  -- scale so the whole diagram fits in the window at zoom=1
+  local fit = math.min(win_w / nat_w, win_h / nat_h)
+  local width = math.floor(nat_w * fit * zoom)
+  local height = math.floor(nat_h * fit * zoom)
+  if width < 1 then width = 1 end
+  if height < 1 then height = 1 end
+  return { width = width, height = height }
+end
+
+local function apply_zoom(p, img)
+  local geom = zoom_geometry(p, img, p.zoom or 1)
+  if geom then
+    img.ignore_global_max_size = true
+    img:render(geom)
+  else
+    img:render()
+  end
+end
+
 local function render_at(p, index)
   local img_path = p.paths[index]
   if not img_path then return end
@@ -85,7 +125,9 @@ local function render_at(p, index)
 
   clear_current_image(p)
   p.image = new_image
-  p.image:render()
+
+  -- zoom only scales the image, never the preview window.
+  apply_zoom(p, new_image)
 end
 
 function M.open(source_bufnr, img_paths)
@@ -105,6 +147,15 @@ function M.open(source_bufnr, img_paths)
   local win = create_vsplit(buf)
   vim.api.nvim_set_current_win(current_win)
 
+  local p = {
+    win = win,
+    buf = buf,
+    paths = img_paths,
+    current = 1,
+    image = nil,
+    zoom = 1,
+  }
+
   local api = require("image")
   local image_obj = api.from_file(img_paths[1], {
     window = win,
@@ -117,16 +168,11 @@ function M.open(source_bufnr, img_paths)
     return nil
   end
 
-  image_obj:render()
+  p.image = image_obj
+  apply_zoom(p, image_obj)
 
-  state.previews[source_bufnr] = {
-    win = win,
-    buf = buf,
-    paths = img_paths,
-    current = 1,
-    image = image_obj,
-  }
-  return state.previews[source_bufnr]
+  state.previews[source_bufnr] = p
+  return p
 end
 
 function M.reload(source_bufnr, img_paths)
@@ -157,6 +203,11 @@ function M.close(source_bufnr)
     vim.api.nvim_buf_delete(p.buf, { force = true })
   end
   state.previews[source_bufnr] = nil
+
+  -- The window is gone, so image.nvim will no longer re-render these paths.
+  local renderer = require("plantuml.renderer")
+  renderer.invalidate(source_bufnr)
+  renderer.cleanup(source_bufnr)
 end
 
 function M.next(source_bufnr)
@@ -175,6 +226,34 @@ function M.prev(source_bufnr)
   render_at(p, prev_idx)
 end
 
+local function clamp_zoom(p)
+  local zoom = config().zoom
+  p.zoom = math.max(zoom.min, math.min(p.zoom, zoom.max))
+end
+
+function M.zoom_in(source_bufnr)
+  local p = state.previews[source_bufnr]
+  if not p or not p.image then return end
+  p.zoom = p.zoom + config().zoom.step
+  clamp_zoom(p)
+  apply_zoom(p, p.image)
+end
+
+function M.zoom_out(source_bufnr)
+  local p = state.previews[source_bufnr]
+  if not p or not p.image then return end
+  p.zoom = p.zoom - config().zoom.step
+  clamp_zoom(p)
+  apply_zoom(p, p.image)
+end
+
+function M.zoom_reset(source_bufnr)
+  local p = state.previews[source_bufnr]
+  if not p or not p.image then return end
+  p.zoom = 1
+  apply_zoom(p, p.image)
+end
+
 function M.exists(bufnr)
   return state.previews[bufnr] ~= nil
 end
@@ -187,6 +266,11 @@ end
 function M.current_index(bufnr)
   local p = state.previews[bufnr]
   return p and p.current or 0
+end
+
+function M.current_zoom(bufnr)
+  local p = state.previews[bufnr]
+  return p and p.zoom or 1
 end
 
 return M

@@ -9,6 +9,9 @@ local commands = {
   PlantumlPreviewClose  = "close",
   PlantumlPreviewNext   = "next_diagram",
   PlantumlPreviewPrev   = "prev_diagram",
+  PlantumlPreviewZoomIn = "zoom_in",
+  PlantumlPreviewZoomOut = "zoom_out",
+  PlantumlPreviewZoomReset = "zoom_reset",
 }
 
 for cmd_name, method in pairs(commands) do

@@ -1,0 +1,37 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install neovim (>= 0.10, for vim.uv)
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+
+      - name: Install plantuml CLI and java
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y plantuml default-jre
+
+      - name: Install plenary.nvim (test harness runtime)
+        run: |
+          mkdir -p "$HOME/.local/share/nvim/site/pack/core/opt"
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim \
+            "$HOME/.local/share/nvim/site/pack/core/opt/plenary.nvim"
+
+      - name: Verify tooling
+        run: |
+          nvim --version | head -1
+          plantuml -version | head -1
+
+      - name: Run test suite
+        run: ./tests/run.sh

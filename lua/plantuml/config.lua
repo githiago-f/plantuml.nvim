@@ -10,6 +10,11 @@ local defaults = {
     exec = "plantuml",
     debounce_ms = 2000,
     temp_dir = "/tmp/nvim-plantuml",
+  },
+  zoom = {
+    step = 0.25,
+    min = 0.25,
+    max = 4,
   }
 }
 
@@ -17,7 +22,7 @@ local defaults = {
 M.options = vim.deepcopy(defaults)
 
 --- @alias PumlOptions
---- | { output: { format: fileFormat, window_size: number }, cmd: { exec: string, debounce_ms: number, temp_dir: string } }
+--- | { output: { format: fileFormat, window_size: number }, cmd: { exec: string, debounce_ms: number, temp_dir: string }, zoom: { step: number, min: number, max: number } }
 
 ---@param opts PumlOptions | nil
 function M.setup(opts)

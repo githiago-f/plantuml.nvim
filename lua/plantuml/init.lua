@@ -30,6 +30,7 @@ function M.open()
     else
       if not preview.open(bufnr, img_paths) then
         require("plantuml.watcher").detach(bufnr)
+        renderer.cleanup(bufnr)
       end
     end
   end)
@@ -60,6 +61,21 @@ end
 function M.prev_diagram()
   local bufnr = vim.api.nvim_get_current_buf()
   require("plantuml.preview").prev(bufnr)
+end
+
+function M.zoom_in()
+  local bufnr = vim.api.nvim_get_current_buf()
+  require("plantuml.preview").zoom_in(bufnr)
+end
+
+function M.zoom_out()
+  local bufnr = vim.api.nvim_get_current_buf()
+  require("plantuml.preview").zoom_out(bufnr)
+end
+
+function M.zoom_reset()
+  local bufnr = vim.api.nvim_get_current_buf()
+  require("plantuml.preview").zoom_reset(bufnr)
 end
 
 return M

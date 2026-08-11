@@ -1,0 +1,72 @@
+@startuml
+title "My simple flow"
+
+package "adventure" {
+  class Board {
+    + Name string
+    + GuildId string
+    + Party []Member
+  }
+
+  class Lane {
+    + Name string
+    + Type LaneType
+
+    + FallbackXpType(): 'hero' | 'strategy'
+  }
+
+  class Scroll {
+    + Code string
+    + Title string
+    + LaneId number
+    + BoardId string
+
+    + ChosenOnes Member[]
+  }
+
+  Board --> Scroll: contains
+
+  package "gameplay" {
+    enum HeroClass {
+      RUNESMITH("pencil", "ux")
+      SQUIRE("shield", "qa")
+      GUILDMASTER("crown", "po")
+      ADVENTURER("tow-swords", "engineer")
+
+      + Icon(): string
+      + Role(): string
+    }
+
+    enum XpType {
+      HERO,
+      STRATEGY
+    }
+
+    enum LaneType {
+      REVIEW(XpType.HERO)
+      BACKLOG(XpType.STRATEGY)
+      DONE(nil)
+      IN_PROGRESS(XpType.HERO)
+      OTHER(XpType)
+
+      + XpType(): XpType
+    }
+
+    LaneType - XpType: has
+  }
+
+  Lane -- LaneType: is
+
+  package "party" {
+    class Member {
+      + UserId string
+      + Avatar string
+      + Nickname string
+      + Role HeroClass
+    }
+
+    Member -- HeroClass: is
+  }
+}
+
+@enduml
