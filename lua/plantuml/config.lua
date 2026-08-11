@@ -1,7 +1,7 @@
 local M = {}
 
 ---@alias fileFormat "svg" | "png" | "utxt"
-M.defaults = {
+local defaults = {
   output = {
     format = "png",
     window_size = 70
@@ -13,15 +13,17 @@ M.defaults = {
   }
 }
 
+---@type PumlOptions
+M.options = vim.deepcopy(defaults)
+
 --- @alias PumlOptions
 --- | { output: { format: fileFormat, window_size: number }, cmd: { exec: string, debounce_ms: number, temp_dir: string } }
 
 ---@param opts PumlOptions | nil
 function M.setup(opts)
-  ---@type PumlOptions
   M.options = vim.tbl_deep_extend(
     "force",
-    M.defaults,
+    M.options,
     opts or {}
   )
 end
