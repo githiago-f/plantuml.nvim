@@ -15,6 +15,7 @@ local defaults = {
     step = 0.25,
     min = 0.25,
     max = 4,
+    pan_step = 2,
   }
 }
 
@@ -22,7 +23,7 @@ local defaults = {
 M.options = vim.deepcopy(defaults)
 
 --- @alias PumlOptions
---- | { output: { format: fileFormat, window_size: number }, cmd: { exec: string, debounce_ms: number, temp_dir: string }, zoom: { step: number, min: number, max: number } }
+--- | { output: { format: fileFormat, window_size: number }, cmd: { exec: string, debounce_ms: number, temp_dir: string }, zoom: { step: number, min: number, max: number, pan_step: number } }
 
 ---@param opts PumlOptions | nil
 function M.setup(opts)

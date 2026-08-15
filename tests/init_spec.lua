@@ -10,6 +10,12 @@ local methods = {
   "zoom_in",
   "zoom_out",
   "zoom_reset",
+  "pan_up",
+  "pan_down",
+  "pan_left",
+  "pan_right",
+  "goto_diagram",
+  "complete_diagram_names",
 }
 
 describe("plantuml public API", function()
@@ -39,6 +45,11 @@ describe("user commands", function()
       "PlantumlPreviewZoomIn",
       "PlantumlPreviewZoomOut",
       "PlantumlPreviewZoomReset",
+      "PlantumlPreviewPanUp",
+      "PlantumlPreviewPanDown",
+      "PlantumlPreviewPanLeft",
+      "PlantumlPreviewPanRight",
+      "PlantumlPreviewGoto",
     }) do
       local ok = pcall(vim.api.nvim_get_commands, {})
       assert.truthy(ok)

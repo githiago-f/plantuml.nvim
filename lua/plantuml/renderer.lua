@@ -3,18 +3,64 @@ local M = {}
 local gen = {}
 local render_dirs = {}
 
+-- Map the `@startuml` blocks of the source buffer to the output filenames
+-- PlantUML produces, in source order:
+--   * unnamed diagram #1            -> <bufnr>.<ext>
+--   * unnamed diagram #k (k > 1)    -> <bufnr>_%03d.<ext>
+--   * named diagram `@startuml Foo` -> Foo.<ext>
+-- Returns `paths, names` (parallel arrays). Named diagrams are thus reachable
+-- through the preview instead of being dropped by a <bufnr> prefix filter.
+-- Files PlantUML wrote under unexpected names (e.g. mangled diagram names)
+-- are appended sorted by name so nothing is lost.
 local function find_output_files(dir, bufnr, ext)
   local files = {}
-  local prefix = tostring(bufnr)
+  local names = {}
+  local by_name = {}
   for _, name in ipairs(vim.fn.readdir(dir) or {}) do
-    if name == prefix .. "." .. ext
-      or name:match("^" .. prefix .. "_%d+%." .. ext .. "$")
-    then
-      table.insert(files, dir .. "/" .. name)
+    by_name[name] = dir .. "/" .. name
+  end
+
+  local unnamed = 0
+  for _, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+    local diagram = line:match("^%s*@startuml%s*(.*)$")
+    if diagram then
+      diagram = diagram:gsub("%s+$", "")
+      local fname
+      local label
+      if diagram ~= "" then
+        fname = diagram .. "." .. ext
+        label = diagram
+      else
+        unnamed = unnamed + 1
+        if unnamed == 1 then
+          fname = tostring(bufnr) .. "." .. ext
+        else
+          fname = string.format("%s_%03d.%s", bufnr, unnamed - 1, ext)
+        end
+        label = string.format("diagram %d", unnamed)
+      end
+      local path = by_name[fname]
+      if path then
+        table.insert(files, path)
+        table.insert(names, label)
+        by_name[fname] = nil
+      end
     end
   end
-  table.sort(files)
-  return files
+
+  local leftover = {}
+  for name in pairs(by_name) do
+    if name:match("%." .. ext .. "$") then
+      table.insert(leftover, name)
+    end
+  end
+  table.sort(leftover)
+  for _, name in ipairs(leftover) do
+    table.insert(files, by_name[name])
+    table.insert(names, name:gsub("%." .. ext .. "$", ""))
+  end
+
+  return files, names
 end
 
 function M.render(bufnr, p, cb)
@@ -85,7 +131,7 @@ function M.render(bufnr, p, cb)
           return
         end
 
-        local output_files = find_output_files(
+        local output_files, names = find_output_files(
           render_dir,
           bufnr,
           config.output.format or "png"
@@ -95,7 +141,7 @@ function M.render(bufnr, p, cb)
           return
         end
 
-        if cb then cb(output_files, render_dir) end
+        if cb then cb(output_files, render_dir, names) end
       end)
     end
   })

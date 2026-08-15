@@ -24,11 +24,11 @@ function M.open()
 
   local p = paths.build(bufnr)
 
-  renderer.render(bufnr, p, function(img_paths)
+  renderer.render(bufnr, p, function(img_paths, _, names)
     if preview.exists(bufnr) then
-      preview.reload(bufnr, img_paths)
+      preview.reload(bufnr, img_paths, names)
     else
-      if not preview.open(bufnr, img_paths) then
+      if not preview.open(bufnr, img_paths, names) then
         require("plantuml.watcher").detach(bufnr)
         renderer.cleanup(bufnr)
       end
@@ -76,6 +76,46 @@ end
 function M.zoom_reset()
   local bufnr = vim.api.nvim_get_current_buf()
   require("plantuml.preview").zoom_reset(bufnr)
+end
+
+function M.pan_up()
+  local bufnr = vim.api.nvim_get_current_buf()
+  require("plantuml.preview").pan_up(bufnr)
+end
+
+function M.pan_down()
+  local bufnr = vim.api.nvim_get_current_buf()
+  require("plantuml.preview").pan_down(bufnr)
+end
+
+function M.pan_left()
+  local bufnr = vim.api.nvim_get_current_buf()
+  require("plantuml.preview").pan_left(bufnr)
+end
+
+function M.pan_right()
+  local bufnr = vim.api.nvim_get_current_buf()
+  require("plantuml.preview").pan_right(bufnr)
+end
+
+-- Jump to a diagram by index or name (`:PlantumlPreviewGoto <name|index>`).
+function M.goto_diagram(query)
+  local bufnr = vim.api.nvim_get_current_buf()
+  require("plantuml.preview").goto_diagram(bufnr, query)
+end
+
+-- Names (and 1-based indices) for `:PlantumlPreviewGoto` completion.
+function M.complete_diagram_names(arglead)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local preview = require("plantuml.preview")
+  local names = {}
+  for i = 1, preview.count(bufnr) do
+    local name = preview.current_name_of(bufnr, i)
+    if name and name:lower():find(arglead:lower(), 1, true) then
+      table.insert(names, name)
+    end
+  end
+  return names
 end
 
 return M

@@ -14,6 +14,7 @@ describe("config", function()
     assert.equals(0.25, config.options.zoom.step)
     assert.equals(0.25, config.options.zoom.min)
     assert.equals(4, config.options.zoom.max)
+    assert.equals(2, config.options.zoom.pan_step)
   end)
 
   it("deep-merges user options over defaults", function()

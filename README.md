@@ -188,6 +188,7 @@ use({
     step = 0.25,          -- amount zoom in/out changes the scale
     min = 0.25,           -- minimum zoom factor
     max = 4,              -- maximum zoom factor
+    pan_step = 2,         -- cells moved per keyboard pan
   },
 }
 ```
@@ -204,10 +205,22 @@ use({
 | `:PlantumlPreviewZoomIn` | Zoom in on the preview image |
 | `:PlantumlPreviewZoomOut`| Zoom out of the preview image |
 | `:PlantumlPreviewZoomReset` | Reset preview zoom to 1x |
+| `:PlantumlPreviewPanUp` | Pan the focused viewport up (when zoomed in) |
+| `:PlantumlPreviewPanDown` | Pan the focused viewport down |
+| `:PlantumlPreviewPanLeft` | Pan the focused viewport left |
+| `:PlantumlPreviewPanRight` | Pan the focused viewport right |
+| `:PlantumlPreviewGoto` | Jump to a diagram by index or name (`:PlantumlPreviewGoto Login Flow`) |
 
-> Zoom only scales the rendered image; it never resizes the preview split.
+> Zoom only scales the image; it never resizes the preview split.
 > `zoom = 1` (default) fits the whole diagram inside the preview window; zoom
-> in overflows the pane on purpose, zoom out shrinks it.
+> out shrinks it. Above `zoom = 1` the preview shows a window-sized, magnified
+> crop of the diagram instead of an overflowing image: **zoom in/out keeps the
+> current viewport center fixed**, and `:PlantumlPreviewPan*` or mouse-dragging
+> in the preview window moves the focused part around.
+>
+> Named diagrams (`@startuml Name`) are included in `Next`/`Prev` cycling and
+> reachable via `:PlantumlPreviewGoto`; the preview statusline shows the
+> current diagram name, index, and zoom.
 
 ## Keymaps
 
@@ -231,6 +244,20 @@ vim.keymap.set("n", "<leader>pzi", "<cmd>PlantumlPreviewZoomIn<CR>", {
 })
 vim.keymap.set("n", "<leader>pzo", "<cmd>PlantumlPreviewZoomOut<CR>", {
   desc = "Zoom out PlantUML preview",
+})
+
+-- Pan the focused viewport while zoomed in
+vim.keymap.set("n", "<leader>puu", "<cmd>PlantumlPreviewPanUp<CR>", {
+  desc = "Pan PlantUML preview up",
+})
+vim.keymap.set("n", "<leader>pud", "<cmd>PlantumlPreviewPanDown<CR>", {
+  desc = "Pan PlantUML preview down",
+})
+vim.keymap.set("n", "<leader>pul", "<cmd>PlantumlPreviewPanLeft<CR>", {
+  desc = "Pan PlantUML preview left",
+})
+vim.keymap.set("n", "<leader>pur", "<cmd>PlantumlPreviewPanRight<CR>", {
+  desc = "Pan PlantUML preview right",
 })
 ```
 

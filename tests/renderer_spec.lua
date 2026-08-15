@@ -34,15 +34,17 @@ end
 
 ---@param buf integer
 ---@return string[]|nil
+---@return string[]|nil
 local function render_sync(buf)
   local done = false
-  local result
-  renderer.render(buf, paths.build(buf), function(files)
+  local result, result_names
+  renderer.render(buf, paths.build(buf), function(files, _, names)
     result = files
+    result_names = names
     done = true
   end)
   vim.wait(15000, function() return done end)
-  return result
+  return result, result_names
 end
 
 describe("renderer", function()
@@ -83,6 +85,31 @@ describe("renderer", function()
     local second = table.concat(vim.fn.readfile(files[2]), "\n")
     assert.matches("first", first)
     assert.matches("second", second)
+  end)
+
+  it("finds named diagrams in source order", function()
+    local buf = make_buffer({
+      "@startuml",
+      "Alice -> Bob: first",
+      "@enduml",
+      "",
+      "@startuml NamedFoo",
+      "Bob -> Charlie",
+      "@enduml",
+      "",
+      "@startuml",
+      "Carol -> Dave: last",
+      "@enduml",
+    })
+    local files, names = render_sync(buf)
+    assert.truthy(files, "render callback never fired")
+    assert.equals(3, #files)
+    assert.same({ "diagram 1", "NamedFoo", "diagram 2" }, names)
+
+    -- unnamed #1, then the named diagram, then unnamed #2 (source order)
+    assert.matches("first", table.concat(vim.fn.readfile(files[1]), "\n"))
+    assert.matches("NamedFoo", vim.fn.fnamemodify(files[2], ":t"))
+    assert.matches("last", table.concat(vim.fn.readfile(files[3]), "\n"))
   end)
 
   it("does not mix output from different diagram counts", function()
