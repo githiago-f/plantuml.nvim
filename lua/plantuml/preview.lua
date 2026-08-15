@@ -169,9 +169,13 @@ local function render_cropped(p, region)
         )
         return
       end
+      local cell = cell_size()
+      if not cell then return end
       render_from(p, out, vp().display_geometry(
         vim.api.nvim_win_get_width(p.win),
         vim.api.nvim_win_get_height(p.win),
+        cell.cell_width,
+        cell.cell_height,
         region
       ))
     end)
@@ -239,12 +243,15 @@ local function update_statusline(p)
   if not p.win or not vim.api.nvim_win_is_valid(p.win) then return end
   local name = (p.names and p.names[p.current]) or ""
   local total = p.paths and #p.paths or 0
+  local zoom = p.zoom or 1
+  local hint = zoom > 1 and "  <drag or Pan*> to move" or ""
   vim.wo[p.win].statusline = string.format(
-    "PlantUML [%d/%d] %s (%.2fx)",
+    "PlantUML [%d/%d] %s (%.2fx)%s",
     p.current,
     total,
     name,
-    p.zoom or 1
+    zoom,
+    hint
   )
 end
 

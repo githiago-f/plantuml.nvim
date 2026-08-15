@@ -110,21 +110,19 @@ function M.keep_center(old_zoom, new_zoom, pan, src_w, src_h, win_w, win_h, cw, 
 end
 
 -- Terminal-cell geometry for rendering a cropped region inside the window.
--- Preserves the region aspect ratio and never exceeds the window.
+-- Scales the region's pixels to fit the window while preserving its aspect
+-- ratio. Since cells are taller than wide, the scale must be computed in
+-- pixels and converted back to cells, or the image letterboxes too small.
 ---@param win_w integer
 ---@param win_h integer
+---@param cw number
+---@param ch number
 ---@param region { w: integer, h: integer }
 ---@return { width: integer, height: integer }
-function M.display_geometry(win_w, win_h, region)
-  local aspect = region.w / region.h
-  local width = win_w
-  local height = math.floor(width / aspect)
-  if height > win_h then
-    height = win_h
-    width = math.floor(height * aspect)
-  end
-  if width < 1 then width = 1 end
-  if height < 1 then height = 1 end
+function M.display_geometry(win_w, win_h, cw, ch, region)
+  local scale = math.min((win_w * cw) / region.w, (win_h * ch) / region.h)
+  local width = math.max(1, math.floor(region.w * scale / cw))
+  local height = math.max(1, math.floor(region.h * scale / ch))
   return { width = width, height = height }
 end
 

@@ -145,8 +145,8 @@ describe("preview", function()
   it("zoom_in crops a window-sized viewport and leaves the pane alone", function()
     local buf = make_buffer({ "@startuml", "x", "@enduml" })
     preview.open(buf, { TMP .. "/11.utxt" })
-    local win = vim.api.nvim_get_current_win()
-    local before = vim.api.nvim_win_get_width(win)
+    local pwin = last_opts.window -- the preview window
+    local before = vim.api.nvim_win_get_width(pwin)
 
     preview.zoom_in(buf)
     wait_rendered(2)
@@ -158,9 +158,26 @@ describe("preview", function()
     -- rendered geometry stays inside the preview window
     local img = first_image()
     assert.truthy(img.geometry)
-    assert.is_true(img.geometry.width <= vim.api.nvim_win_get_width(win))
-    assert.is_true(img.geometry.height <= vim.api.nvim_win_get_height(win))
-    assert.equals(before, vim.api.nvim_win_get_width(win))
+    assert.is_true(img.geometry.width <= vim.api.nvim_win_get_width(pwin))
+    assert.is_true(img.geometry.height <= vim.api.nvim_win_get_height(pwin))
+    assert.equals(before, vim.api.nvim_win_get_width(pwin))
+  end)
+
+  it("zoom_in magnifies instead of shrinking the image", function()
+    local buf = make_buffer({ "@startuml", "x", "@enduml" })
+    preview.open(buf, { TMP .. "/11.utxt" })
+    local base = first_image().geometry.width
+
+    preview.zoom_in(buf)
+    wait_rendered(2)
+
+    -- the magnified crop must be at least as wide as the zoom-1 fit
+    assert.is_true(#crops == 1)
+    assert.is_true(
+      first_image().geometry.width >= base,
+      "zooming in should never shrink the image (got "
+        .. first_image().geometry.width .. " < " .. base .. ")"
+    )
   end)
 
   it("zoom keeps the viewport center fixed", function()
