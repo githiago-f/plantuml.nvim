@@ -290,20 +290,36 @@ local function drag_poll(p)
     return
   end
   local pos = vim.fn.getmousepos()
+  -- getmousepos() reports screen coordinates; the buffer coords (col/row) are
+  -- nil when the mouse is over non-text areas (e.g. the statusline).
+  if type(pos.screencol) ~= "number" or type(pos.screenrow) ~= "number" then
+    return
+  end
+  -- stop once the mouse leaves the preview window (a release there won't
+  -- reach our buffer-local <LeftRelease>; statusline is winid 0)
+  if pos.winid ~= 0 and pos.winid ~= p.win then
+    stop_drag(p)
+    return
+  end
   local win_w = vim.api.nvim_win_get_width(p.win)
   local win_h = vim.api.nvim_win_get_height(p.win)
-  p.pan.x = p.drag.start_pan.x - (pos.col - p.drag.col) * (region.w / win_w)
-  p.pan.y = p.drag.start_pan.y - (pos.row - p.drag.row) * (region.h / win_h)
-  refresh_view(p)
+  local x = p.drag.start_pan.x - (pos.screencol - p.drag.col) * (region.w / win_w)
+  local y = p.drag.start_pan.y - (pos.screenrow - p.drag.row) * (region.h / win_h)
+  if x ~= p.pan.x or y ~= p.pan.y then
+    p.pan.x = x
+    p.pan.y = y
+    refresh_view(p)
+  end
 end
 
 local function drag_start(p, pos)
   if not current_region(p) then return end
+  if type(pos.screencol) ~= "number" or type(pos.screenrow) ~= "number" then return end
   stop_drag(p)
   p.drag = {
     start_pan = { x = p.pan.x, y = p.pan.y },
-    col = pos.col,
-    row = pos.row,
+    col = pos.screencol,
+    row = pos.screenrow,
     timer = vim.uv.new_timer(),
   }
   p.drag.timer:start(30, 30, vim.schedule_wrap(function()
