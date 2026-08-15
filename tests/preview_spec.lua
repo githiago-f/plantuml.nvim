@@ -206,6 +206,41 @@ describe("preview", function()
     assert.is_true(crops[2].region.x > before_x, "panning right moves the crop right")
   end)
 
+  it("reload keeps the current diagram, zoom and pan", function()
+    local buf = make_buffer({ "@startuml", "x", "@enduml" })
+    preview.open(buf, { TMP .. "/11.utxt", TMP .. "/11_001.utxt" })
+    preview.next(buf) -- view diagram 2
+    wait_rendered(2)
+
+    preview.zoom_in(buf)
+    wait_rendered(3)
+    preview.pan_right(buf)
+    wait_rendered(4)
+    local crop_before = crops[#crops].region.x
+    local zoom_before = preview.current_zoom(buf)
+
+    -- simulate a re-render after an edit: same files come back
+    preview.reload(buf, { TMP .. "/11.utxt", TMP .. "/11_001.utxt" }, { "a", "b" })
+    wait_rendered(5)
+
+    assert.equals(2, preview.current_index(buf), "reload must stay on the current diagram")
+    assert.equals(zoom_before, preview.current_zoom(buf), "reload must keep the zoom level")
+    assert.equals(crop_before, crops[#crops].region.x, "reload must keep the pan position")
+  end)
+
+  it("reload clamps the diagram index when the count shrank", function()
+    local buf = make_buffer({ "@startuml", "x", "@enduml" })
+    preview.open(buf, { TMP .. "/11.utxt", TMP .. "/11_001.utxt" })
+    preview.next(buf)
+    wait_rendered(2)
+
+    preview.reload(buf, { TMP .. "/11.utxt" }, { "a" })
+    wait_rendered(3)
+
+    assert.equals(1, preview.current_index(buf))
+    assert.matches("11.utxt", first_image().path)
+  end)
+
   it("pan is a no-op at zoom 1", function()
     local buf = make_buffer({ "@startuml", "x", "@enduml" })
     preview.open(buf, { TMP .. "/11.utxt" })

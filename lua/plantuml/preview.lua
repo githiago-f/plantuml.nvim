@@ -340,7 +340,7 @@ end
 
 -- ---------------------------------------------------------------------------
 
-local function render_at(p, index)
+local function render_at(p, index, keep_view)
   local img_path = p.paths[index]
   if not img_path then return end
 
@@ -365,7 +365,9 @@ local function render_at(p, index)
 
   p.src = img_path
   p.nat = { w = new_image.image_width, h = new_image.image_height }
-  p.pan = { x = 0, y = 0 }
+  if not keep_view then
+    p.pan = { x = 0, y = 0 }
+  end
 
   clear_current_image(p)
   p.image = new_image
@@ -430,7 +432,10 @@ function M.reload(source_bufnr, img_paths, names)
 
   p.paths = to_list(img_paths)
   p.names = names or {}
-  render_at(p, 1)
+  -- stay on the diagram being viewed (clamped if the count shrank) and keep
+  -- the zoom level and pan position; only a fresh open or next/prev resets
+  local idx = math.max(1, math.min(p.current, #p.paths))
+  render_at(p, idx, true)
 end
 
 function M.close(source_bufnr)
