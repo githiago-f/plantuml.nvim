@@ -112,6 +112,18 @@ describe("renderer", function()
     assert.matches("last", table.concat(vim.fn.readfile(files[3]), "\n"))
   end)
 
+  it("does not crash on leftover output files (unexpected names)", function()
+    -- a '.' in a diagram name makes plantuml treat the tail as the extension
+    -- and write "A.utxt" instead of "A.B.utxt", so the block's expected name
+    -- never matches and the file lands in the leftover list; appending it must
+    -- not throw
+    local buf = make_buffer({ "@startuml A.B", "Alice -> Bob", "@enduml" })
+    local files, names = render_sync(buf)
+    assert.truthy(files, "render callback never fired")
+    assert.truthy(files[1])
+    assert.equals("A", names[1])
+  end)
+
   it("does not mix output from different diagram counts", function()
     local buf = make_buffer({
       "@startuml",

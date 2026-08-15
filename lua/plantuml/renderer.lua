@@ -57,7 +57,7 @@ local function find_output_files(dir, bufnr, ext)
   table.sort(leftover)
   for _, name in ipairs(leftover) do
     table.insert(files, by_name[name])
-    table.insert(names, name:gsub("%." .. ext .. "$", ""))
+    table.insert(names, (name:gsub("%." .. ext .. "$", "")))
   end
 
   return files, names
@@ -156,10 +156,9 @@ end
 -- once the preview window is gone (image.nvim stops re-rendering then).
 function M.cleanup(bufnr)
   for _, dir in ipairs(render_dirs[bufnr] or {}) do
-    for _, name in ipairs(vim.fn.readdir(dir) or {}) do
-      pcall(os.remove, dir .. "/" .. name)
-    end
-    pcall(vim.fn.delete, dir, "d")
+    -- plantuml may create subdirectories for names containing '/' (it treats
+    -- them as path separators), so remove recursively
+    pcall(vim.fn.delete, dir, "rf")
   end
   render_dirs[bufnr] = nil
 end
